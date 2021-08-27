@@ -3,14 +3,26 @@ const path = require("path");
 const { app, BrowserWindow } = require("electron");
 const isDev = require("electron-is-dev");
 
+let installExtension, REACT_DEVELOPER_TOOLS;
+
+if (isDev) {
+  const devTools = require("electron-devtools-installer");
+  installExtension = devTools.default;
+  REACT_DEVELOPER_TOOLS = devTools.REACT_DEVELOPER_TOOLS;
+}
+
+if (require("electron-squirrel-startup")) {
+  app.quit();
+}
+
 function createWindow() {
   // Create the browser window.
   const win = new BrowserWindow({
     width: 1280,
     height: 720,
     webPreferences: {
-      nodeIntegration: true
-    }
+      nodeIntegration: true,
+    },
   });
 
   // and load the index.html of the app.
@@ -30,7 +42,14 @@ function createWindow() {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+  if (isDev) {
+    installExtension(REACT_DEVELOPER_TOOLS)
+      .then((name) => console.log(`Added Extension:  ${name}`))
+      .catch((error) => console.log(`An error occurred: , ${error}`));
+  }
+});
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
